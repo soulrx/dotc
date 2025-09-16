@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dotc"
 version = "0.3.2"
-description = "DOTC (like Yahtzee) - Access Nested Dicts Một Database Layer to ... Bind Them (All) Lists via Dots"
+description = "DOTC (like Yahtzee) - Access Nested Dicts and Lists via Dots"
 readme = "README.md"
 authors = [{ name = "Mike Steele", email = "mike@mikesteele.us" }]
 license = { file = "LICENSE" }
@@ -16,12 +16,12 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["database", "fetch", "db"]
+keywords = ["nested", "dot", "dict", "list", "datastructure", "dotspace", "dotdict", "dotlist", "xml", "dotc"]
 dependencies = []
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
-dev = ["bumpver", "twine", "wheel", "setuptools"]
+dev = ["bumpver", "build", "twine", "wheel", "setuptools"]
 
 [project.urls]
 Homepage = "https://github.com/soulrx/dotc"
