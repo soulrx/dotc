@@ -1,2 +1,2 @@
-current_version = "0.3.4"
+current_version = "0.3.5"
 from .dotc import *
