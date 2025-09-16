@@ -1,0 +1,39 @@
+# remove current and start over
+find . -maxdepth 1  |egrep -v '^\.\/\.git|^\.$|migrate.txt' |xargs -I{} rm -rf {}
+# cp tmplt_pypi recursively 
+cp -a ../tmplt_pypi/* .
+# sed replace project names
+find . -maxdepth 1 -type f  |egrep -v '^\.\/\.git|^\.$|migrate.txt' |xargs -I{} grep -l motdb {} |xargs -I{} sed -i '' -e 's/motdb/motass/g' {}
+# mv project directory
+mv src/motdb src/motass
+# change description
+find . -maxdepth 3 -type f |egrep -v "pyc$|^\./\.|migrate.txt" |egrep .$ |xargs -I{} sed -i '' -e "s/Một Database Layer to ... Bind Them (All)/Một API Simple Site/g" {};
+# push init
+git add -A && git commit -m 'init pypi struct with new name' && git push && \
+python3.10 -m venv venv && source venv/bin/activate && \
+pip install --upgrade pip && \
+pip install -r orig_reqs.txt && \
+bumpver update --patch --dry # and then without dry
+# build
+python -m build
+# twine test and upload to pypi.org
+twine check dist/* # and then
+twine upload dist/* # enter pypi user/pass
+
+# pip list --format=freeze
+
+
+
+## new
+DIR=/opt/apps
+OWN=gitdeploy
+GRP=adm
+sudo setfacl -R -m g:${GRP}:rwX $DIR && \
+sudo chmod -R g+s $DIR && \
+sudo find $DIR -exec chown $OWN:$GRP {} + 
+unset DIR ; unset OWN ; unset GRP ;
+
+
+#git 2.35 is dumb
+# as the user you are sshing in with - so I did it for root, gitdeploy, and mfsteele
+find /opt/{repo,apps}/ -maxdepth 1 -type d |egrep '/.+/.+/.+' |xargs -I{} git config --global --add safe.directory {}

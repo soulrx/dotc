@@ -1,3 +1,5 @@
+current_version = "0.3.1"
+
 # DataPath imports and support functions
 ###################################################################################################
 from copy import copy
@@ -246,7 +248,7 @@ def is_iterable(obj: Any) -> bool:
         return False
     return isinstance(obj, Iterable)
 
-""" self._version = '0.3.1'
+""" self.__version__ = '0.3.1'
 
 NOTE 0.3.1
 - A decent working state excepting escaping and subsitutions, which have not been tested
@@ -277,7 +279,7 @@ class Dotc:
             d = Dotc(data,node) or d = Dotc(data=data,node='root')
             d.a returns 1
             d.b.c returns 3
-            d.b.d[0] returns 4
+            d.b.d._0 returns 4
     - if _strict=0 (default), accessing a non-existent attribute returns _default instead of raising AttributeError
       - example using d from above:
             d.b.x returns None (the default _default value)
@@ -291,7 +293,7 @@ class Dotc:
             d.b.d._ returns [4,5,6]
     """
     def __init__(self, data=None, node=None, default=None, **kw):
-        self._version = '0.2.0'
+        self.__version__ = '0.3.1'
         self._debug = int(kw.pop('_debug', 0)) or int(kw.pop('debug', 0))
         self._prefix = kw.pop('_prefix', '_')
         self._sepr = kw.pop('_sepr', '.')

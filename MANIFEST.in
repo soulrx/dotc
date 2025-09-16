@@ -1,0 +1,4 @@
+# MANIFEST.in
+
+include src/dotc/inc/json/*.json
+include src/dotc/inc/whls/*.whl
