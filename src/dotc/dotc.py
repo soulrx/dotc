@@ -68,7 +68,18 @@ class DataPath:
             path = path.replace(esc+SEPARATOR,placeholder)
             for p in path.split(SEPARATOR):
                 p = p.replace(placeholder,SEPARATOR)
-                if isnum(p) and isinstance(obj,(list,tuple)):
+
+                if isinstance(obj,Dotc):
+                    if obj._is_list_index(p):
+                        index = int(p) if isint(p) else int(p[1:])-1 if onebased else int(p[1:])
+                        if index < 0:
+                            return default
+                        this_kindex = f'_{index}' if not obj._onebased else f'_{index+1}'
+                        obj = getattr(obj, this_kindex, default)
+                    else:
+                        obj = obj._get(p, default=default, onebased=onebased, esc=esc, sub=placeholder, debug=debug)
+
+                elif isnum(p) and isinstance(obj,(list,tuple)):
                     index = int(p)-1 if onebased else int(p)
                     if index < 0:
                         return default
@@ -79,7 +90,19 @@ class DataPath:
                     obj = getattr(obj,p)
                 else:
                     obj = obj[p]
+
+            if isinstance(obj,Dotc):
+                bug(f'final obj: got Dotc object {obj=}', debug)
+                if hasattr(obj,'_val') and hasattr(obj, '_default') and obj._val != obj._default:
+                    obj = obj._val
+                elif hasattr(obj,'_val') and hasattr(obj, '_default'):
+                    try: obj = obj._
+                    except: obj = default
+                else:
+                    obj = default
+
             return obj
+
         except:
             return default
 

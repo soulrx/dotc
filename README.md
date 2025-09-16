@@ -65,3 +65,33 @@ Converts Python Data Structures (dicts, lists, scalars) to a nested object struc
         '_parent': 'b',
         '_strict': 0,
         '_val': None}
+
+    - backported DataPath which was the original tool used without self dot access for programmatically accessing nested objects
+      now it can be used on Dotc objects
+      
+      - example (using o from above):
+
+        from dotc import DataPath as DP
+        
+        dp = DP()
+        >>> dp.get('b.d',o)
+        [4, 5, '6']
+
+        >>> r = dp.get('b.d',o,debug=1)
+        DEBUG: getting b from o=Dotc( "root", _val=None, _key_ct=2, _ls_ct=0 )
+        DEBUG: getting d from o=Dotc( "b", _val=None, _key_ct=2, _ls_ct=0 )
+        DEBUG: final obj: got Dotc object obj=Dotc( "d", _val=None, _key_ct=0, _ls_ct=3 )
+        >>> r
+        [4, 5, '6']
+
+        >>> dp.get('b.d.2',o,debug=1)
+        DEBUG: getting b from o=Dotc( "root", _val=None, _key_ct=2, _ls_ct=0 )
+        DEBUG: getting d from o=Dotc( "b", _val=None, _key_ct=2, _ls_ct=0 )
+        '6'
+
+        NOTE: '.2' could be used instead of '._2' (required for actual dotc attribute access) as DataPath converts it for dotc objects
+
+        NOTE: Also, DataPath works on other nested datastructures in Python
+
+        >>> dp.get('b.d.2', data, debug=1)
+        '6'
