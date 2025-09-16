@@ -5,6 +5,13 @@ pip install dotc
 python
 from dotc import Dotc
 
+d1 = Dotc( data={'some':'data'}, node='root or name of data object - defaults to empty string')
+
+
+# optionally
+from dotc import DataPath
+dp = DataPath()
+
 Converts Python Data Structures (dicts, lists, scalars) to a nested object structure
 
     - can access nested data with dot notation and _listindex for lists
