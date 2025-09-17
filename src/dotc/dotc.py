@@ -270,28 +270,6 @@ def is_iterable(obj: Any) -> bool:
         return False
     return isinstance(obj, Iterable)
 
-""" self.__version__ = '0.3.1'
-
-NOTE 0.3.1
-- A decent working state excepting escaping and subsitutions, which have not been tested
-- can set _default during instantiation only; default: _default=None
-  - accessing a non-existent attribute returns _default instead of raising AttributeError
-  - setting ._strict=1 raises AttributeError if attribute not found
-  - setting ._strict=1 after instantiation has no effect on child nodes (can fix with @property def _strict)
-- access nested data structs with dot notation and _listindex for lists
-- use ._ to get fully resolved data structure otherwise ._val is the scalar value if set
-  and its Dotc objects all the way down
-- shared attrs is no longer a problem
-- got rid of all of the printed AttributeErrors except when _debug > 1
-
-TODO:
-- sort bug printing by levels
-- fix _strict not being propagated to child nodes
-- convert all applicable methods to @property(s)
-- need unit tests
-- need consistent prms in all the _ methods
-
-"""
 class Dotc:
     """ Converts Python Data Structures (dicts, lists, scalars) to a nested object structure
     - can access nested data with dot notation and _listindex for lists
@@ -322,7 +300,7 @@ class Dotc:
             # Create instance normally
             instance = super().__new__(cls)
             # We'll handle the tuple return using a factory method approach
-            return cls._create_with_result(data, node, default, _pathget, **kw)
+            return cls._spawn(data, node, default, _pathget, **kw)
         
         # Normal instantiation
         return super().__new__(cls)
@@ -407,7 +385,7 @@ class Dotc:
         return res
 
     @classmethod
-    def _create_with_result(cls, data, node=None, default=None, pathget=None, **kw):
+    def _spawn(cls, data, node=None, default=None, pathget=None, **kw):
         """
         Internal factory method that creates a Dotc instance and returns (instance, result) tuple.
         Used when both data and _pathget/_pathget are provided during instantiation.
@@ -427,40 +405,7 @@ class Dotc:
             result = instance._default
             
         return instance, result
-
-    def spawn(self, pathget=None):
-        """
-        Returns a tuple of (self, result) where result is the value at pathget.
-        Similar to how Pget works, but as a method call.
-        
-        Usage:
-            data = {'a': {'b': [1, 2, 3]}}
-            d = Dotc(data)
-            dotc_instance, result = d.spawn('a.b.0')  # Returns (Dotc instance, 1)
-        """
-        if pathget is None:
-            pathget = self._pathget if hasattr(self, '_pathget') and self._pathget else ''
-        
-        if pathget:
-            result = self(pathget)
-        else:
-            result = self._default
-            
-        return self, result
     
-    @classmethod
-    def create_with_result(cls, data=None, pathget=None, node=None, default=None, **kw):
-        """
-        Public factory method that always returns a tuple of (instance, result).
-        Use this if you always want both the instance and the result.
-        
-        Usage:
-            data = {'a': {'b': [1, 2, 3]}}
-            dotc_instance, result = Dotc.create_with_result(data, 'a.b.0')
-        """
-        if pathget:
-            kw['_pathget'] = pathget
-        return cls._create_with_result(data, node, default, pathget, **kw)
 
     @property
     def _(self):

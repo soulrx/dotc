@@ -179,7 +179,7 @@ class TestDotcComplexDataStructures(unittest.TestCase):
 
 
 class TestDotcSpawnFunctionality(unittest.TestCase):
-    """Test the spawn functionality and tuple returns."""
+    """Test the instantiation spawn functionality and tuple returns."""
     
     def setUp(self):
         self.staff_data = {
@@ -199,24 +199,6 @@ class TestDotcSpawnFunctionality(unittest.TestCase):
         # Verify the object still works normally - use ._val for scalar access
         self.assertEqual(dc.staff.coders._1._val, 'jeremie')
     
-    def test_spawn_method(self):
-        """Test the spawn method returns tuple."""
-        dc = Dotc(self.staff_data)
-        dc_ref, result = dc.spawn('staff.coders.2')
-        
-        self.assertIs(dc_ref, dc)  # Should return the same object
-        self.assertEqual(result, 'trey')
-    
-    def test_create_with_result_factory(self):
-        """Test the create_with_result factory method."""
-        dc, result = Dotc.create_with_result(self.staff_data, 'staff.details.team_size')
-        
-        self.assertIsInstance(dc, Dotc)
-        self.assertEqual(result, 4)
-        
-        # Verify normal access still works - use ._val for scalar access
-        self.assertEqual(dc.staff.coders._3._val, 'donnie')
-    
     def test_call_method_after_spawn(self):
         """Test using __call__ method after spawn instantiation."""
         dc, first_result = Dotc(self.staff_data, _pathget='staff.coders.0')
@@ -231,10 +213,9 @@ class TestDotcSpawnFunctionality(unittest.TestCase):
     
     def test_spawn_with_invalid_path(self):
         """Test spawn with invalid paths returns default."""
-        dc = Dotc(self.staff_data)
-        dc_ref, result = dc.spawn('invalid.path.here')
+        dc, result = Dotc(self.staff_data, _pathget='invalid.path.here')
         
-        self.assertIs(dc_ref, dc)
+        self.assertIsInstance(dc, Dotc)
         self.assertIsNone(result)  # Should return default (None)
 
 

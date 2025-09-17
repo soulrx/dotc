@@ -44,7 +44,7 @@ d.b.d._0      # Returns: 4 (list access with _index)
 ```
 
 ### 🚀 Instant Results with Spawn
-Get both the object and a specific value in one call:
+Get both the object and a specific value in one call during instantiation:
 
 ```python
 # Get object and value simultaneously
@@ -54,18 +54,16 @@ staff_data = {
     }
 }
 
-# Method 1: During instantiation with _pathget
+# During instantiation with _pathget
 dc, result = Dotc(staff_data, _pathget='staff.coders.0')
 print(result)  # mike
 
-# Method 2: Using spawn method
-dc = Dotc(staff_data)
-dc, result = dc.spawn('staff.coders.1')
-print(result)  # jeremie
+# You can also use different paths
+dc2, result2 = Dotc(staff_data, _pathget='staff.coders.1')
+print(result2)  # jeremie
 
-# Method 3: Using factory method
-dc, result = Dotc.create_with_result(staff_data, 'staff.coders.2')
-print(result)  # trey
+dc3, result3 = Dotc(staff_data, _pathget='staff.coders.2')
+print(result3)  # trey
 ```
 
 ### 🎯 Programmatic Path Access with `__call__`
@@ -252,8 +250,8 @@ staff_data = {
     }
 }
 
-# Extract initial value and setup for more queries
-processor, first_coder = Dotc.create_with_result(staff_data, 'staff.coders.0')
+# Extract initial value during instantiation
+processor, first_coder = Dotc(staff_data, _pathget='staff.coders.0')
 print(f"Lead developer: {first_coder}")  # Lead developer: mike
 
 # Use the same object for additional queries
@@ -264,11 +262,10 @@ print(f"Team size: {team_size}")  # Team size: 4
 ## 📚 API Reference
 
 ### Class Methods
-- `Dotc(data, node=None, default=None, **kwargs)` - Create a new Dotc object
-- `Dotc.create_with_result(data, pathget, **kwargs)` - Create and extract value simultaneously
+- `Dotc(data, node=None, default=None, _pathget=None, **kwargs)` - Create a new Dotc object
+- When `_pathget` is provided, returns `(instance, result)` tuple
 
 ### Instance Methods  
-- `obj.spawn(pathget)` - Returns `(self, result)` tuple
 - `obj(path)` - Get value at path programmatically
 - `obj._` - Get fully resolved data structure
 - `obj._show(verbosity=0)` - Inspect object structure
