@@ -17,27 +17,28 @@ class TestDotcBasicFunctionality(unittest.TestCase):
         self.mixed_data = {'numbers': [1, 2, 3], 'string': 'test', 'nested': {'value': 42}}
     
     def test_simple_dict_access(self):
-        """Test accessing simple dictionary values using ._val."""
+        """Test accessing simple dictionary values."""
         d = Dotc(self.simple_dict)
-        # Access the actual values via ._val
-        self.assertEqual(d.a._val, 1)
-        self.assertEqual(d.b._val, 2)
-        self.assertEqual(d.c._val, 3)
+        # Scalar values should be returned directly
+        self.assertEqual(d.a, 1)
+        self.assertEqual(d.b, 2)
+        self.assertEqual(d.c, 3)
     
     def test_simple_list_access(self):
         """Test accessing list elements with _index notation."""
         d = Dotc(self.mixed_data)
-        self.assertEqual(d.numbers._0._val, 1)
-        self.assertEqual(d.numbers._1._val, 2)
-        self.assertEqual(d.numbers._2._val, 3)
+        # List elements should return scalar values directly
+        self.assertEqual(d.numbers._0, 1)
+        self.assertEqual(d.numbers._1, 2)
+        self.assertEqual(d.numbers._2, 3)
     
     def test_missing_key_returns_default(self):
         """Test that missing keys return the default value (None)."""
         d = Dotc(self.simple_dict)
         self.assertIsNone(d.missing_key)
-        # Test nested missing access
-        missing_nested = d.a.nonexistent
-        self.assertIsNone(missing_nested)
+        # Test nested missing access - since d.a is now 1 (int), accessing .nonexistent should raise AttributeError
+        with self.assertRaises(AttributeError):
+            missing_nested = d.a.nonexistent
     
     def test_custom_default_value(self):
         """Test custom default values."""
@@ -118,43 +119,43 @@ class TestDotcComplexDataStructures(unittest.TestCase):
         """Test accessing deeply nested data structures."""
         d = Dotc(self.staff_data)
         
-        # Test accessing nested arrays - use ._val for scalar values
-        self.assertEqual(d.staff.coders._0._val, 'mike')
-        self.assertEqual(d.staff.coders._3._val, 'donnie')
-        self.assertEqual(d.staff.managers._1._val, 'john')
+        # Test accessing nested arrays - scalar values returned directly
+        self.assertEqual(d.staff.coders._0, 'mike')
+        self.assertEqual(d.staff.coders._3, 'donnie')
+        self.assertEqual(d.staff.managers._1, 'john')
         
-        # Test accessing nested dictionaries - use ._val for scalar values
-        self.assertEqual(d.staff.details.team_size._val, 6)
-        self.assertEqual(d.staff.details.location._val, 'NYC')
+        # Test accessing nested dictionaries - scalar values returned directly
+        self.assertEqual(d.staff.details.team_size, 6)
+        self.assertEqual(d.staff.details.location, 'NYC')
         
         # Test accessing arrays of dictionaries
-        self.assertEqual(d.staff.details.projects._0.name._val, 'project_a')
-        self.assertEqual(d.staff.details.projects._1.status._val, 'completed')
+        self.assertEqual(d.staff.details.projects._0.name, 'project_a')
+        self.assertEqual(d.staff.details.projects._1.status, 'completed')
         
         # Test budget data
-        self.assertEqual(d.budget.quarterly._2._val, 110000)
-        self.assertEqual(d.budget.annual._val, 460000)
+        self.assertEqual(d.budget.quarterly._2, 110000)
+        self.assertEqual(d.budget.annual, 460000)
     
     def test_api_response_navigation(self):
         """Test navigating complex API response structures."""
         d = Dotc(self.api_response)
         
-        # Test user data access - use ._val for scalar values
-        self.assertEqual(d.data.users._0.id._val, 1)
-        self.assertEqual(d.data.users._0.profile.name._val, 'Alice Johnson')
-        self.assertEqual(d.data.users._0.profile.email._val, 'alice@example.com')
-        self.assertEqual(d.data.users._0.profile.preferences.theme._val, 'dark')
-        self.assertEqual(d.data.users._0.profile.preferences.notifications._0._val, 'email')
-        self.assertEqual(d.data.users._0.scores._1._val, 92)
+        # Test user data access - scalar values returned directly
+        self.assertEqual(d.data.users._0.id, 1)
+        self.assertEqual(d.data.users._0.profile.name, 'Alice Johnson')
+        self.assertEqual(d.data.users._0.profile.email, 'alice@example.com')
+        self.assertEqual(d.data.users._0.profile.preferences.theme, 'dark')
+        self.assertEqual(d.data.users._0.profile.preferences.notifications._0, 'email')
+        self.assertEqual(d.data.users._0.scores._1, 92)
         
         # Test second user
-        self.assertEqual(d.data.users._1.profile.name._val, 'Bob Smith')
-        self.assertEqual(d.data.users._1.profile.preferences.theme._val, 'light')
-        self.assertEqual(d.data.users._1.scores._2._val, 95)
+        self.assertEqual(d.data.users._1.profile.name, 'Bob Smith')
+        self.assertEqual(d.data.users._1.profile.preferences.theme, 'light')
+        self.assertEqual(d.data.users._1.scores._2, 95)
         
         # Test metadata
-        self.assertEqual(d.data.metadata.total_users._val, 2)
-        self.assertEqual(d.data.metadata.version._val, '1.0')
+        self.assertEqual(d.data.metadata.total_users, 2)
+        self.assertEqual(d.data.metadata.version, '1.0')
     
     def test_mixed_types_in_arrays(self):
         """Test arrays containing mixed data types."""
@@ -170,12 +171,13 @@ class TestDotcComplexDataStructures(unittest.TestCase):
         }
         
         d = Dotc(mixed_array_data)
-        self.assertEqual(d.mixed._0._val, 'string')
-        self.assertEqual(d.mixed._1._val, 42)
-        self.assertEqual(d.mixed._2.nested._val, 'dict')
-        self.assertEqual(d.mixed._3._1._val, 2)
-        self.assertEqual(d.mixed._4._val, True)
-        self.assertIsNone(d.mixed._5._val)
+        self.assertEqual(d.mixed._0, 'string')
+        self.assertEqual(d.mixed._1, 42)
+        self.assertEqual(d.mixed._2.nested, 'dict')
+        self.assertEqual(d.mixed._3._1, 2)
+        self.assertEqual(d.mixed._4, True)
+        # None values return Dotc object; use ._ to get None value
+        self.assertIsNone(d.mixed._5._)
 
 
 class TestDotcSpawnFunctionality(unittest.TestCase):
@@ -196,8 +198,8 @@ class TestDotcSpawnFunctionality(unittest.TestCase):
         self.assertIsInstance(dc, Dotc)
         self.assertEqual(result, 'mike')
         
-        # Verify the object still works normally - use ._val for scalar access
-        self.assertEqual(dc.staff.coders._1._val, 'jeremie')
+        # Verify the object still works normally - scalar values returned directly
+        self.assertEqual(dc.staff.coders._1, 'jeremie')
     
     def test_call_method_after_spawn(self):
         """Test using __call__ method after spawn instantiation."""
@@ -320,11 +322,11 @@ class TestDotcEdgeCases(unittest.TestCase):
         }
         
         d = Dotc(data_with_none)
-        # None values are stored in ._val
-        self.assertIsNone(d.value._val)
-        self.assertIsNone(d.nested.also_none._val)
-        self.assertIsNone(d.nested.list_with_none._1._val)
-        self.assertEqual(d.nested.list_with_none._2._val, 3)
+        # None values return Dotc object; use ._ to get None value  
+        self.assertIsNone(d.value._)
+        self.assertIsNone(d.nested.also_none._)
+        self.assertIsNone(d.nested.list_with_none._1._)
+        self.assertEqual(d.nested.list_with_none._2, 3)
     
     def test_boolean_and_numeric_values(self):
         """Test handling of boolean and numeric values."""
@@ -338,13 +340,13 @@ class TestDotcEdgeCases(unittest.TestCase):
         }
         
         d = Dotc(data)
-        # Use ._val to access the actual boolean/numeric values
-        self.assertTrue(d.bool_true._val)
-        self.assertFalse(d.bool_false._val)
-        self.assertEqual(d.zero._val, 0)
-        self.assertEqual(d.negative._val, -42)
-        self.assertEqual(d.float_val._val, 3.14)
-        self.assertEqual(d.large_num._val, 1000000)
+        # Boolean and numeric values returned directly
+        self.assertTrue(d.bool_true)
+        self.assertFalse(d.bool_false)
+        self.assertEqual(d.zero, 0)
+        self.assertEqual(d.negative, -42)
+        self.assertEqual(d.float_val, 3.14)
+        self.assertEqual(d.large_num, 1000000)
     
     def test_string_values_with_special_characters(self):
         """Test string values with special characters."""
@@ -357,19 +359,19 @@ class TestDotcEdgeCases(unittest.TestCase):
         }
         
         d = Dotc(data)
-        # Use ._val to access the actual string values
-        self.assertEqual(d.unicode._val, 'Hello 🌍')
-        self.assertEqual(d.multiline._val, 'Line 1\nLine 2\nLine 3')
-        self.assertEqual(d.escaped._val, 'Quotes: "double" and \'single\'')
-        self.assertEqual(d.path_like._val, 'looks.like.a.path')
-        self.assertEqual(d.empty_string._val, '')
+        # String values returned directly
+        self.assertEqual(d.unicode, 'Hello 🌍')
+        self.assertEqual(d.multiline, 'Line 1\nLine 2\nLine 3')
+        self.assertEqual(d.escaped, 'Quotes: "double" and \'single\'')
+        self.assertEqual(d.path_like, 'looks.like.a.path')
+        self.assertEqual(d.empty_string, '')
     
     def test_custom_node_names(self):
         """Test custom node names."""
         d = Dotc({'test': 'value'}, node='custom_root')
         self.assertEqual(d._node, 'custom_root')
-        # Use ._val to access the actual value
-        self.assertEqual(d.test._val, 'value')
+        # String values returned directly
+        self.assertEqual(d.test, 'value')
 
 
 class TestDataPath(unittest.TestCase):

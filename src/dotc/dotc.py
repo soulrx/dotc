@@ -351,6 +351,12 @@ class Dotc:
 
         try:
             attr = object.__getattribute__(self, name)
+            
+            # If the attribute is a Dotc object with a _val that's not the default, return the _val
+            if hasattr(attr, '_val') and hasattr(attr, '_default'):
+                if attr._val is not attr._default:
+                    return attr._val
+            
             return attr
         except AttributeError:
             # Try to get the control attributes, but handle case where they don't exist yet
