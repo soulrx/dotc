@@ -1,104 +1,281 @@
-# dotc
-DOTC (like Yahtzee) - Access Nested Dicts and Lists via Dots (Dotc objects all the way down) 
+# DOTC 🎯
 
+**Access nested Python data structures using simple dot notation**
+
+Transform complex nested dictionaries and lists into easily navigable objects with dot notation access.
+
+## Quick Start
+
+```bash
 pip install dotc
-python
+```
+
+```python
 from dotc import Dotc
 
-d1 = Dotc( data={'some':'data'}, node='root or name of data object - defaults to empty string')
+# Your nested data
+data = {
+    'user': {
+        'name': 'Alice',
+        'scores': [85, 92, 78]
+    }
+}
 
+# Convert to dot-accessible object
+d = Dotc(data)
 
-# optionally
+# Access with simple dots
+print(d.user.name)      # Alice
+print(d.user.scores._0) # 85
+```
+
+## ✨ Core Features
+
+### 🔍 Simple Dot Access
+Access nested data structures naturally:
+
+```python
+data = {'a': 1, 'b': {'c': 3, 'd': [4, 5, 6]}}
+d = Dotc(data)
+
+d.a           # Returns: 1
+d.b.c         # Returns: 3
+d.b.d._0      # Returns: 4 (list access with _index)
+```
+
+### 🚀 Instant Results with Spawn
+Get both the object and a specific value in one call:
+
+```python
+# Get object and value simultaneously
+staff_data = {
+    'staff': {
+        'coders': ['mike', 'jeremie', 'trey', 'donnie']
+    }
+}
+
+# Method 1: During instantiation with _pathget
+dc, result = Dotc(staff_data, _pathget='staff.coders.0')
+print(result)  # mike
+
+# Method 2: Using spawn method
+dc = Dotc(staff_data)
+dc, result = dc.spawn('staff.coders.1')
+print(result)  # jeremie
+
+# Method 3: Using factory method
+dc, result = Dotc.create_with_result(staff_data, 'staff.coders.2')
+print(result)  # trey
+```
+
+### 🎯 Programmatic Path Access with `__call__`
+Use the call method to get values by path after instantiation:
+
+```python
+staff_data = {
+    'staff': {
+        'coders': ['mike', 'jeremie', 'trey', 'donnie']
+    }
+}
+
+# Create with initial path extraction
+dc, result = Dotc(staff_data, _pathget='staff.coders.0')
+print(result)  # mike
+
+# Then use __call__ for additional path queries
+result2 = dc('staff.coders.1')  # jeremie
+result3 = dc('staff.coders.3')  # donnie
+```
+
+### 🛡️ Safe Access with Defaults
+Never worry about missing keys:
+
+```python
+d = Dotc({'a': {'b': 1}})
+
+d.a.b         # Returns: 1
+d.a.missing   # Returns: None (default)
+d.x.y.z       # Returns: None (safe traversal)
+```
+
+### 🔄 Full Data Resolution
+Get the complete resolved data structure:
+
+```python
+d = Dotc({'a': 1, 'b': {'c': [2, 3]}})
+
+d._           # Returns: {'a': 1, 'b': {'c': [2, 3]}}
+d.b._         # Returns: {'c': [2, 3]}
+d.b.c._       # Returns: [2, 3]
+```
+
+## 📖 Tutorial
+
+### Basic Usage
+
+```python
+from dotc import Dotc
+
+# Simple dictionary
+data = {'name': 'John', 'age': 30}
+d = Dotc(data)
+print(d.name)  # John
+print(d.age)   # 30
+```
+
+### Nested Dictionaries
+
+```python
+data = {
+    'person': {
+        'details': {
+            'name': 'Jane',
+            'location': 'NYC'
+        }
+    }
+}
+
+d = Dotc(data)
+print(d.person.details.name)      # Jane
+print(d.person.details.location)  # NYC
+```
+
+### Working with Lists
+
+```python
+data = {
+    'fruits': ['apple', 'banana', 'cherry'],
+    'numbers': [1, 2, 3, 4, 5]
+}
+
+d = Dotc(data)
+print(d.fruits._0)    # apple
+print(d.fruits._1)    # banana
+print(d.numbers._4)   # 5
+```
+
+### Mixed Nested Structures
+
+```python
+data = {
+    'users': [
+        {'name': 'Alice', 'scores': [95, 87]},
+        {'name': 'Bob', 'scores': [78, 92]}
+    ]
+}
+
+d = Dotc(data)
+print(d.users._0.name)        # Alice
+print(d.users._0.scores._0)   # 95
+print(d.users._1.scores._1)   # 92
+```
+
+## 🎯 Advanced Features
+
+### Inspection and Debugging
+
+```python
+d = Dotc({'a': 1, 'b': {'c': [1, 2, 3]}})
+
+# Basic inspection
+d._show()
+
+# Verbose inspection
+d._show(v=1)
+
+# Inspect specific parts
+d._show(d.b, v=1)
+```
+
+### Using DataPath for Programmatic Access
+
+For cases where you need programmatic path traversal:
+
+```python
 from dotc import DataPath
+
+data = {'a': {'b': [1, 2, 3]}}
+d = Dotc(data)
+
 dp = DataPath()
+result = dp.get('a.b.0', d)  # Returns: 1
 
-Converts Python Data Structures (dicts, lists, scalars) to a nested object structure
+# Works with regular Python objects too
+result = dp.get('a.b.0', data)  # Returns: 1
+```
 
-    - can access nested data with dot notation and _listindex for lists
+## 🔧 Configuration Options
 
-      - example:
-            data = {'a':1,'b':{'c':3,'d':[4,5,'6']}}
-            node = 'root' # optional node name; defaults to '', but child nodes get their names from keys
-            o = Dotc(data,node) or o = Dotc(data=data,node='root')
-            o.a returns 1
-            o.b.c returns 3
-            o.b.d._0 returns 4
-    
-    - if _strict=0 (default), accessing a non-existent attribute returns _default instead of raising AttributeError
+```python
+d = Dotc(
+    data={'a': 1},
+    node='custom_name',      # Custom node name
+    default='N/A',           # Custom default value
+    _strict=1,              # Raise errors for missing keys
+    _debug=1                # Enable debug output
+)
+```
 
-      - example using o from above:
-            o.b.x returns None (the default _default value)
+## 🎪 Use Cases
 
-    - if _strict=1, setting a value on a non-existent path raises an exception
+### Configuration Management
+```python
+config = {
+    'database': {'host': 'localhost', 'port': 5432},
+    'api': {'timeout': 30, 'retries': 3}
+}
 
-    - if setting _strict=1 after instantiation, it has no effect on child nodes (TODO: fix with @property(s))
+cfg = Dotc(config)
+db_host = cfg.database.host      # localhost
+api_timeout = cfg.api.timeout    # 30
+```
 
-    - use ._ to get fully resolved data structure otherwise ._val is the scalar/resultant value if set
-        otherwise the Dotc object is returned so you can keep traversing with dot notation
+### JSON API Response Handling
+```python
+api_response = {
+    'data': {
+        'user': {'id': 123, 'profile': {'email': 'user@example.com'}}
+    }
+}
 
-      - example using d from above:
-            o._ returns {'a':1,'b':{'c':3,'d':[4,5,'6']}}
-            o.b._ returns {'c':3,'d':[4,5,'6']} where as d.b returns the Dotc object itself so that:
-            o.b.d._ returns [4,5,'6']
+resp = Dotc(api_response)
+email = resp.data.user.profile.email  # user@example.com
+```
 
-    - explore (using o from above) passing in the dotc object (or not for self) 
-        and optionally v for verbosity:
-        
-        >>> o._show()
-        {'_key_ct': 2,
-        '_ls_ct': 0,
-        '_node': 'root',
-        '_parent': None,
-        '_strict': 0,
-        '_val': None}
+### Data Processing Pipelines
+```python
+# Get object and extract value in one step
+staff_data = {
+    'staff': {
+        'coders': ['mike', 'jeremie', 'trey', 'donnie'],
+        'metrics': {'team_size': 4, 'experience': 'senior'}
+    }
+}
 
-        >>> o._show(v=1)
-        {'_key_ct': 2,
-        '_ls_ct': 0,
-        '_node': 'root',
-        '_parent': None,
-        '_strict': 0,
-        '_val': None,
-        'a': 1,
-        'b': Dotc( "b", _val=None, _key_ct=2, _ls_ct=0 )}
+# Extract initial value and setup for more queries
+processor, first_coder = Dotc.create_with_result(staff_data, 'staff.coders.0')
+print(f"Lead developer: {first_coder}")  # Lead developer: mike
 
-        >>> o._show(o.b.d, v=1)
-        {'_0': 4,
-        '_1': 5,
-        '_2': '6',
-        '_key_ct': 0,
-        '_ls_ct': 3,
-        '_node': 'd',
-        '_parent': 'b',
-        '_strict': 0,
-        '_val': None}
+# Use the same object for additional queries
+team_size = processor('staff.metrics.team_size')
+print(f"Team size: {team_size}")  # Team size: 4
+```
 
-    - backported DataPath which was the original tool used without self dot access for programmatically accessing nested objects
-      now it can be used on Dotc objects
-      
-      - example (using o from above):
+## 📚 API Reference
 
-        from dotc import DataPath as DP
-        
-        dp = DP()
-        >>> dp.get('b.d',o)
-        [4, 5, '6']
+### Class Methods
+- `Dotc(data, node=None, default=None, **kwargs)` - Create a new Dotc object
+- `Dotc.create_with_result(data, pathget, **kwargs)` - Create and extract value simultaneously
 
-        >>> r = dp.get('b.d',o,debug=1)
-        DEBUG: getting b from o=Dotc( "root", _val=None, _key_ct=2, _ls_ct=0 )
-        DEBUG: getting d from o=Dotc( "b", _val=None, _key_ct=2, _ls_ct=0 )
-        DEBUG: final obj: got Dotc object obj=Dotc( "d", _val=None, _key_ct=0, _ls_ct=3 )
-        >>> r
-        [4, 5, '6']
+### Instance Methods  
+- `obj.spawn(pathget)` - Returns `(self, result)` tuple
+- `obj(path)` - Get value at path programmatically
+- `obj._` - Get fully resolved data structure
+- `obj._show(verbosity=0)` - Inspect object structure
 
-        >>> dp.get('b.d.2',o,debug=1)
-        DEBUG: getting b from o=Dotc( "root", _val=None, _key_ct=2, _ls_ct=0 )
-        DEBUG: getting d from o=Dotc( "b", _val=None, _key_ct=2, _ls_ct=0 )
-        '6'
+### Utility Classes
+- `DataPath.get(path, obj, default)` - Static path traversal
 
-        NOTE: '.2' could be used instead of '._2' (required for actual dotc attribute access) as DataPath converts it for dotc objects
+---
 
-        NOTE: Also, DataPath works on other nested datastructures in Python
-
-        >>> dp.get('b.d.2', data, debug=1)
-        '6'
+**DOTC** - Making nested data navigation as easy as ABC! 🎯
