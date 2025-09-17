@@ -314,6 +314,19 @@ class Dotc:
             d.b._ returns {'c':3,'d':[4,5,6]} where as d.b returns the Dotc object itself so that:
             d.b.d._ returns [4,5,6]
     """
+    def __new__(cls, data=None, node=None, default=None, **kw):
+        # Check if both data and _pathget are provided for tuple return
+        _pathget = kw.get('_pathget') or kw.get('pathget')
+        
+        if data is not None and _pathget is not None:
+            # Create instance normally
+            instance = super().__new__(cls)
+            # We'll handle the tuple return using a factory method approach
+            return cls._create_with_result(data, node, default, _pathget, **kw)
+        
+        # Normal instantiation
+        return super().__new__(cls)
+    
     def __init__(self, data=None, node=None, default=None, **kw):
         self._debug = int(kw.pop('_debug', 0)) or int(kw.pop('debug', 0))
         self._prefix = kw.pop('_prefix', '_')
@@ -359,11 +372,25 @@ class Dotc:
         #    return object.__getattribute__(self, '_resolve')()
 
         try:
-            strict = object.__getattribute__(self, '_strict')
-            default = object.__getattribute__(self, '_default')
-            debug = object.__getattribute__(self, '_debug')
             attr = object.__getattribute__(self, name)
+            return attr
         except AttributeError:
+            # Try to get the control attributes, but handle case where they don't exist yet
+            try:
+                strict = object.__getattribute__(self, '_strict')
+            except AttributeError:
+                strict = 0
+            
+            try:
+                default = object.__getattribute__(self, '_default')
+            except AttributeError:
+                default = None
+                
+            try:
+                debug = object.__getattribute__(self, '_debug')
+            except AttributeError:
+                debug = 0
+                
             msg = f'warning: AttributeError caught (could just be part of backfilling missing containers): {name=}, {strict=}, {default=}'
             if int(debug) > 1:
                 print(msg)
@@ -372,18 +399,68 @@ class Dotc:
             else:
                 return default
 
-        # This uses the default attribute lookup.
-        if hasattr(attr, '_val') and attr._val is not default:
-            return attr._val
-
-        return attr
-
     def __call__(self, path=None):
         if not isinstance(path, (str, bytes)) or not path:
             return self._default
         data = self._resolve()
         res = DataPath.get(path, data, self._default, self._sepr, self._onebased, self._esc, self._sub, self._debug)
         return res
+
+    @classmethod
+    def _create_with_result(cls, data, node=None, default=None, pathget=None, **kw):
+        """
+        Internal factory method that creates a Dotc instance and returns (instance, result) tuple.
+        Used when both data and _pathget/_pathget are provided during instantiation.
+        """
+        # Remove pathget from kwargs to avoid duplicate processing
+        kw.pop('_pathget', None)
+        kw.pop('pathget', None)
+        
+        # Create instance normally but bypass __new__ to avoid recursion
+        instance = super(Dotc, cls).__new__(cls)
+        instance.__init__(data, node, default, **kw)
+        
+        # Get the result using the pathget
+        if pathget:
+            result = instance(pathget)
+        else:
+            result = instance._default
+            
+        return instance, result
+
+    def spawn(self, pathget=None):
+        """
+        Returns a tuple of (self, result) where result is the value at pathget.
+        Similar to how Pget works, but as a method call.
+        
+        Usage:
+            data = {'a': {'b': [1, 2, 3]}}
+            d = Dotc(data)
+            dotc_instance, result = d.spawn('a.b.0')  # Returns (Dotc instance, 1)
+        """
+        if pathget is None:
+            pathget = self._pathget if hasattr(self, '_pathget') and self._pathget else ''
+        
+        if pathget:
+            result = self(pathget)
+        else:
+            result = self._default
+            
+        return self, result
+    
+    @classmethod
+    def create_with_result(cls, data=None, pathget=None, node=None, default=None, **kw):
+        """
+        Public factory method that always returns a tuple of (instance, result).
+        Use this if you always want both the instance and the result.
+        
+        Usage:
+            data = {'a': {'b': [1, 2, 3]}}
+            dotc_instance, result = Dotc.create_with_result(data, 'a.b.0')
+        """
+        if pathget:
+            kw['_pathget'] = pathget
+        return cls._create_with_result(data, node, default, pathget, **kw)
 
     @property
     def _(self):
