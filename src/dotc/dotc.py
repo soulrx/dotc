@@ -326,7 +326,7 @@ class Dotc:
         self._strict = kw.pop('_strict', 0)  # if 1, then setting a value on a non-existent path raises an exception
 
         self._attrs = ['_version','_debug','_prefix','_sepr','_onebased','_node','_parent','_esc','_sub']
-        self._attrs += ['_default','_strict']
+        self._attrs += ['_default','_strict','_path','_pathget']
         self._methods_primary = ['_get', '_get_val', '_get_data', '_set', '_set_val', '_set_data', '_data', '_to_pathdict']
         self._methods_other = ['_show', '_to_lsprms', '_is_scalar', '_is_list_index', '_get_data_keys', '_get_list_keys', '_get_dict_keys']
         self._methods_other += ['_is_empty_dotc', '_resolve', '_clear_data_attributes']
@@ -338,7 +338,7 @@ class Dotc:
         # self._ will be a reserved method for resolving all data within a dotc object
         self._clear_data_attributes()
         self._val = kw.pop('_val', None) # this is for scalar data or result of a data path get
-        self._node = node if node is not None else kw.pop('_node', '')
+        self._node = node if node is not None else kw.pop('_node', 'root')
         _data = kw.pop('_data', None)
         data = _data if _data is not None else data
         if data is not None:
